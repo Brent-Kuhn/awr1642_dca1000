@@ -5,10 +5,11 @@ import logging as log
 import threading
 from queue import Queue
 
-def readADC():
+def readADC(nC):
+    # nC is the Number of packets to buffer (default should be 3)
+
     # Make dynamic variables
     NS = 256    # Frame size
-    NC = 3      # Number of packets to buffer
     adcData = [] # Empty array for storing returned adc data
     count = 0
 
@@ -16,20 +17,15 @@ def readADC():
     UDP_IP = "192.168.33.30"
     UDP_PORT = 4098
 
-    #set socket number and the previous socket number to 0 to initialize them as ints
+    # Set socket number and the previous socket number to 0 
+    # to initialize them as ints
     prevNum = 0
     sNum = 0
 
-    # Setup UDP socket protocol
-    log.debug("Initializing socket bind")
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind((UDP_IP, UDP_PORT))
-    log.debug("Socket bind complete")
-
-    while (count < NC):
+    while (count < nC):
         try:
             # Gather data from the DCA1000
-            data, addr = socket.recvfrom(1500)
+            data, addr = sock.recvfrom(1500)
 
             # Check to see if data is in order
             sNum = int.from_bytes(data[0:4], byteorder = "little")
@@ -49,6 +45,13 @@ def readADC():
 
             # Update the previus socket number to be the current socket number
             prevNum = sNum
+
+        except:
+            # Setup UDP socket protocol
+            log.debug("Initializing socket bind")
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.bind((UDP_IP, UDP_PORT))
+            log.debug("Socket bind complete")
 
         finally:
             socket.close()

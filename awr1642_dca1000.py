@@ -2,12 +2,15 @@
 import socket
 import numpy as np
 import logging as log
-
+import threading
+from queue import Queue
 
 def readADC():
     # Make dynamic variables
     NS = 256    # Frame size
     NC = 3      # Number of packets to buffer
+    adcData = [] # Empty array for storing returned adc data
+    count = 0
 
     # Set IP and Port addresses to match the documentation
     UDP_IP = "192.168.33.30"
@@ -20,10 +23,10 @@ def readADC():
     # Setup UDP socket protocol
     log.debug("Initializing socket bind")
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind(UDP_IP, UDP_PORT)
+    sock.bind((UDP_IP, UDP_PORT))
     log.debug("Socket bind complete")
 
-    while True:
+    while (count < NC):
         try:
             # Gather data from the DCA1000
             data, addr = socket.recvfrom(1500)
@@ -38,8 +41,11 @@ def readADC():
             # Find length of data
             sLen = int.from_bytes(data[4:10], byteorder = "little")
 
-            # Extract the data from the socket\
-            sData = int.from_bytes(data[10:sLen+1])
+            # Extract the data from the socket
+            sData = int.from_bytes(data[10:sLen+1], byteorder="litle", signed=True)
+
+            # Append the new data to the adcData array
+            adcData.append(sData)
 
             # Update the previus socket number to be the current socket number
             prevNum = sNum
@@ -47,4 +53,4 @@ def readADC():
         finally:
             socket.close()
     
-    return sData
+    return adcData

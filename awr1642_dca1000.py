@@ -9,8 +9,9 @@ def readADC(nC):
     # nC is the Number of packets to buffer (default should be 3)
 
     # Make dynamic variables
-    NS = 256    # Frame size
-    adcData = [] # Empty array for storing returned adc data
+    NS = 256        # Frame size
+    adcData = []    # Empty array for storing returned adc data
+    tempData = []   # Empty array for storing any temporary data
     count = 0
 
     # Set IP and Port addresses to match the documentation
@@ -22,16 +23,17 @@ def readADC(nC):
     prevNum = 0
     sNum = 0
 
-    while (count < nC):
+    for(x in range(nC)):
         try:
             # Gather data from the DCA1000
             data, addr = sock.recvfrom(1500)
 
             # Check to see if data is in order
+            # Get the socket number
             sNum = int.from_bytes(data[0:4], byteorder = "little")
-            if (sNum != 0 & prevNum != 0):
-                if (sNum != (prevNum + 1)):
-                    log.error("Socket out of order")
+            # if (sNum != 0 & prevNum != 0):
+            #     if (sNum != (prevNum + 1)):
+            #         log.error("Socket out of order")
                     # Add zero filling for missing sockets
 
             # Find length of data
@@ -40,8 +42,8 @@ def readADC(nC):
             # Extract the data from the socket
             sData = int.from_bytes(data[10:sLen+1], byteorder="litle", signed=True)
 
-            # Append the new data to the adcData array
-            adcData.append(sData)
+            # Append the new data to the tempData array
+            tempData.append([sNum, sData])
 
             # Update the previus socket number to be the current socket number
             prevNum = sNum
@@ -56,4 +58,11 @@ def readADC(nC):
         finally:
             socket.close()
     
+    # Sort the data according to the socket number
+    tempData = sorted(adcData, key=lambda adcData: adcData[0])
+    # Strip socket numbers so that only data is sent
+    for i in range(len(adcData)):
+        adcData.append(adcData[i][1])
+
+    # Return only nC ammount of data as an array
     return adcData

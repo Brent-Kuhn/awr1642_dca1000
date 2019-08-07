@@ -25,10 +25,10 @@ def readADC(nC):
     sNum = 0
 
     # Setup UDP socket protocol
-    log.debug("Initializing socket bind")
+    log.debug("Initializing socket bind.")
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((UDP_IP, UDP_PORT))
-    log.debug("Socket bind complete")
+    log.debug("Socket bind complete.")
 
     for x in range(nC):
         try:
@@ -56,14 +56,11 @@ def readADC(nC):
             prevNum = sNum
 
         except:
-            # Setup UDP socket protocol
-            log.debug("Initializing socket bind")
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            sock.bind((UDP_IP, UDP_PORT))
-            log.debug("Socket bind complete")
+            log.debug("Socket connection seems to be lost or not found.")
 
         finally:
             socket.close()
+            log.shutdown()
     
     # Sort the data according to the socket number
     tempData = sorted(adcData, key=lambda adcData: adcData[0])

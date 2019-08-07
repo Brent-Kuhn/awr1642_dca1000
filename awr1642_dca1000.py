@@ -12,7 +12,8 @@ def readADC(nC):
     NS = 256        # Frame size
     adcData = []    # Empty array for storing returned adc data
     tempData = []   # Empty array for storing any temporary data
-    count = 0
+
+    log.basicConfig(level=log.DEBUG, format='%(message)s',)
 
     # Set IP and Port addresses to match the documentation
     UDP_IP = "192.168.33.30"
@@ -23,7 +24,13 @@ def readADC(nC):
     prevNum = 0
     sNum = 0
 
-    for(x in range(nC)):
+    # Setup UDP socket protocol
+    log.debug("Initializing socket bind")
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind((UDP_IP, UDP_PORT))
+    log.debug("Socket bind complete")
+
+    for x in range(nC):
         try:
             # Gather data from the DCA1000
             data, addr = sock.recvfrom(1500)
@@ -66,3 +73,5 @@ def readADC(nC):
 
     # Return only nC ammount of data as an array
     return adcData
+
+data = readADC(3)
